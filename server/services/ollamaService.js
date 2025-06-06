@@ -3,7 +3,7 @@ import axios from 'axios';
 class OllamaService {
   constructor() {
     this.baseURL = process.env.OLLAMA_URL || 'http://localhost:11434';
-    this.model = process.env.OLLAMA_MODEL || 'llava:latest';
+    this.model = process.env.OLLAMA_MODEL || 'qwen2.5vl:7b';
     this.timeout = 120000; // 2 minutes timeout
   }
 
