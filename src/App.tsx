@@ -3,11 +3,12 @@ import { Header } from './components/Header';
 import { FileUpload } from './components/FileUpload';
 import { ProcessingCard } from './components/ProcessingCard';
 import { Stats } from './components/Stats';
+import { AnalysisTypeSelector } from './components/AnalysisTypeSelector';
 import { useFileUpload } from './hooks/useFileUpload';
 import { Trash2, RefreshCw, FileText } from 'lucide-react';
 
 function App() {
-  const { files, isUploading, uploadFile, removeFile, clearAll } = useFileUpload();
+  const { files, isUploading, analysisType, setAnalysisType, uploadFile, removeFile, clearAll } = useFileUpload();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-emerald-50">
@@ -19,12 +20,18 @@ function App() {
             Transform Your Documents with AI
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Upload PDF documents and let our Ollama-powered AI analyze each page, 
-            extracting insights and providing detailed analysis with high accuracy.
+            Upload PDF documents and choose between content analysis for insights extraction 
+            or forgery detection for document authenticity verification.
           </p>
         </div>
 
         <div className="space-y-8">
+          <AnalysisTypeSelector 
+            selectedType={analysisType}
+            onTypeChange={setAnalysisType}
+            disabled={isUploading}
+          />
+          
           <FileUpload onFileUpload={uploadFile} isUploading={isUploading} />
           
           <Stats files={files} />
@@ -59,6 +66,7 @@ function App() {
                     key={file.id}
                     file={file}
                     onRemove={removeFile}
+                    analysisType={analysisType}
                   />
                 ))}
               </div>

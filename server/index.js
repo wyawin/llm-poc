@@ -6,6 +6,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { processDocument } from './services/documentProcessor.js';
+import { detectDocumentForgery } from './services/forgeryDetectionService.js';
 import { ollamaService } from './services/ollamaService.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -116,6 +117,54 @@ app.post('/api/process-document', upload.single('file'), async (req, res) => {
   }
 });
 
+// Forgery detection endpoint
+app.post('/api/detect-forgery', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file uploaded'
+      });
+    }
+
+    const filePath = req.file.path;
+    const fileName = req.file.originalname;
+
+    console.log(`Detecting forgery in document: ${fileName}`);
+
+    // Detect forgery in the document
+    const forgeryResults = await detectDocumentForgery(filePath, fileName);
+
+    // Clean up uploaded file
+    fs.unlinkSync(filePath);
+
+    res.json({
+      success: true,
+      message: 'Forgery detection completed successfully',
+      data: {
+        fileName: forgeryResults.fileName,
+        totalPages: forgeryResults.totalPages,
+        results: forgeryResults.results,
+        stats: forgeryResults.processingStats
+      }
+    });
+
+  } catch (error) {
+    console.error('Error detecting forgery:', error);
+    
+    // Clean up file if it exists
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error detecting forgery',
+      error: error.message
+    });
+  }
+});
+
 // Get processing status endpoint (for real-time updates)
 app.get('/api/processing-status/:jobId', (req, res) => {
   // This would be implemented with a job queue system in production
@@ -147,4 +196,6 @@ app.use((error, req, res, next) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/api/health`);
+  console.log(`Document processing: http://localhost:${PORT}/api/process-document`);
+  console.log(`Forgery detection: http://localhost:${PORT}/api/detect-forgery`);
 });

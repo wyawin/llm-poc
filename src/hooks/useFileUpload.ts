@@ -1,9 +1,10 @@
 import { useState, useCallback } from 'react';
-import { UploadedFile, ProcessingResult } from '../types';
+import { UploadedFile, ProcessingResult, ForgeryAnalysisResult, AnalysisType } from '../types';
 
 export const useFileUpload = () => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [analysisType, setAnalysisType] = useState<AnalysisType>('content');
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -33,6 +34,7 @@ export const useFileUpload = () => {
       // Create FormData for file upload
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('analysisType', analysisType);
 
       // Update to processing status
       setFiles(prev => prev.map(f => 
@@ -41,8 +43,13 @@ export const useFileUpload = () => {
           : f
       ));
 
+      // Determine endpoint based on analysis type
+      const endpoint = analysisType === 'content' 
+        ? 'http://34.101.179.14:3001/api/process-document'
+        : 'http://34.101.179.14:3001/api/detect-forgery';
+
       // Send to backend API
-      const response = await fetch('http://34.101.179.14:3001/api/process-document', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         body: formData,
       });
@@ -55,20 +62,35 @@ export const useFileUpload = () => {
       const result = await response.json();
 
       if (result.success) {
-        // Update with results including summary
-        setFiles(prev => prev.map(f => 
-          f.id === uploadedFile.id 
-            ? { 
-                ...f, 
-                status: 'completed', 
-                progress: 100,
-                pages: result.data.totalPages,
-                results: result.data.results,
-                summary: result.data.summary,
-                stats: result.data.stats
-              }
-            : f
-        ));
+        // Update with results based on analysis type
+        if (analysisType === 'content') {
+          setFiles(prev => prev.map(f => 
+            f.id === uploadedFile.id 
+              ? { 
+                  ...f, 
+                  status: 'completed', 
+                  progress: 100,
+                  pages: result.data.totalPages,
+                  results: result.data.results,
+                  summary: result.data.summary,
+                  stats: result.data.stats
+                }
+              : f
+          ));
+        } else {
+          setFiles(prev => prev.map(f => 
+            f.id === uploadedFile.id 
+              ? { 
+                  ...f, 
+                  status: 'completed', 
+                  progress: 100,
+                  pages: result.data.totalPages,
+                  forgeryResults: result.data.results,
+                  stats: result.data.stats
+                }
+              : f
+          ));
+        }
       } else {
         throw new Error(result.message || 'Processing failed');
       }
@@ -87,7 +109,7 @@ export const useFileUpload = () => {
     } finally {
       setIsUploading(false);
     }
-  }, []);
+  }, [analysisType]);
 
   const removeFile = useCallback((fileId: string) => {
     setFiles(prev => prev.filter(f => f.id !== fileId));
@@ -100,6 +122,8 @@ export const useFileUpload = () => {
   return {
     files,
     isUploading,
+    analysisType,
+    setAnalysisType,
     uploadFile,
     removeFile,
     clearAll,

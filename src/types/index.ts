@@ -8,6 +8,7 @@ export interface UploadedFile {
   progress: number;
   pages?: number;
   results?: ProcessingResult[];
+  forgeryResults?: ForgeryAnalysisResult[];
   summary?: DocumentSummary;
   stats?: ProcessingStats;
   error?: string;
@@ -21,6 +22,59 @@ export interface ProcessingResult {
   processingTime: number;
   model?: string;
   error?: string;
+}
+
+export interface ForgeryAnalysisResult {
+  pageNumber: number;
+  imageUrl: string;
+  forgeryAnalysis: ForgeryDetection;
+  overallRiskScore: number;
+  processingTime: number;
+  model?: string;
+  error?: string;
+}
+
+export interface ForgeryDetection {
+  fontAnalysis: FontAnalysis;
+  spacingAnalysis: SpacingAnalysis;
+  imageQualityAnalysis: ImageQualityAnalysis;
+  structuralAnalysis: StructuralAnalysis;
+  overallAssessment: string;
+  riskFactors: string[];
+  authenticityScore: number;
+}
+
+export interface FontAnalysis {
+  fontConsistency: number;
+  suspiciousCharacters: string[];
+  fontMixingDetected: boolean;
+  digitalFontIndicators: string[];
+  analysis: string;
+}
+
+export interface SpacingAnalysis {
+  letterSpacing: number;
+  wordSpacing: number;
+  lineSpacing: number;
+  irregularities: string[];
+  suspiciousPatterns: string[];
+  analysis: string;
+}
+
+export interface ImageQualityAnalysis {
+  resolution: string;
+  compressionArtifacts: boolean;
+  digitalManipulationSigns: string[];
+  pixelationIssues: boolean;
+  analysis: string;
+}
+
+export interface StructuralAnalysis {
+  alignmentIssues: string[];
+  marginInconsistencies: boolean;
+  layoutAnomalies: string[];
+  watermarkAnalysis: string;
+  analysis: string;
 }
 
 export interface DocumentSummary {
@@ -45,3 +99,5 @@ export interface ApiResponse {
   data?: any;
   error?: string;
 }
+
+export type AnalysisType = 'content' | 'forgery';

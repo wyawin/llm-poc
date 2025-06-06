@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UploadedFile } from '../types';
+import { UploadedFile, AnalysisType } from '../types';
 import { 
   FileText, 
   Clock, 
@@ -11,17 +11,21 @@ import {
   Download,
   FileCheck,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Shield
 } from 'lucide-react';
+import { ForgeryResultsCard } from './ForgeryResultsCard';
 
 interface ProcessingCardProps {
   file: UploadedFile;
   onRemove: (fileId: string) => void;
+  analysisType: AnalysisType;
 }
 
-export const ProcessingCard: React.FC<ProcessingCardProps> = ({ file, onRemove }) => {
+export const ProcessingCard: React.FC<ProcessingCardProps> = ({ file, onRemove, analysisType }) => {
   const [showSummary, setShowSummary] = useState(false);
   const [showPages, setShowPages] = useState(false);
+  const [showForgeryResults, setShowForgeryResults] = useState(false);
 
   const getStatusIcon = () => {
     switch (file.status) {
@@ -43,9 +47,14 @@ export const ProcessingCard: React.FC<ProcessingCardProps> = ({ file, onRemove }
       case 'uploading':
         return 'Uploading...';
       case 'processing':
-        return `Processing page ${Math.ceil((file.progress / 100) * (file.pages || 1))} of ${file.pages || 1}`;
+        const totalPages = analysisType === 'content' ? (file.pages || 1) : (file.pages || 1);
+        return `Processing page ${Math.ceil((file.progress / 100) * totalPages)} of ${totalPages}`;
       case 'completed':
-        return `Completed • ${file.results?.length || 0} pages processed`;
+        if (analysisType === 'content') {
+          return `Completed • ${file.results?.length || 0} pages processed`;
+        } else {
+          return `Completed • ${file.forgeryResults?.length || 0} pages analyzed for forgery`;
+        }
       case 'error':
         return file.error || 'Processing failed';
       default:
@@ -65,13 +74,24 @@ export const ProcessingCard: React.FC<ProcessingCardProps> = ({ file, onRemove }
 
   const [selected, setSelected] = useState<null | typeof file.results[0]>(null);
 
+  // Show forgery results if analysis type is forgery and we have results
+  if (analysisType === 'forgery' && file.status === 'completed' && file.forgeryResults) {
+    return <ForgeryResultsCard results={file.forgeryResults} fileName={file.name} />;
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-lg">
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <FileText className="h-6 w-6 text-blue-600" />
+            <div className={`p-2 rounded-lg ${
+              analysisType === 'content' ? 'bg-blue-50' : 'bg-red-50'
+            }`}>
+              {analysisType === 'content' ? (
+                <FileText className="h-6 w-6 text-blue-600" />
+              ) : (
+                <Shield className="h-6 w-6 text-red-600" />
+              )}
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 truncate max-w-xs">
@@ -80,6 +100,15 @@ export const ProcessingCard: React.FC<ProcessingCardProps> = ({ file, onRemove }
               <p className="text-sm text-gray-500">
                 {formatFileSize(file.size)} • {new Date(file.uploadedAt).toLocaleTimeString()}
               </p>
+              <div className="flex items-center space-x-2 mt-1">
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  analysisType === 'content' 
+                    ? 'bg-blue-100 text-blue-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {analysisType === 'content' ? 'Content Analysis' : 'Forgery Detection'}
+                </span>
+              </div>
             </div>
           </div>
           
@@ -102,7 +131,8 @@ export const ProcessingCard: React.FC<ProcessingCardProps> = ({ file, onRemove }
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
               className={`h-2 rounded-full transition-all duration-300 ${
-                file.status === 'error' ? 'bg-red-500' : 'bg-blue-600'
+                file.status === 'error' ? 'bg-red-500' : 
+                analysisType === 'content' ? 'bg-blue-600' : 'bg-red-600'
               }`}
               style={{ width: `${file.progress}%` }}
             />
@@ -122,8 +152,8 @@ export const ProcessingCard: React.FC<ProcessingCardProps> = ({ file, onRemove }
           </div>
         )}
 
-        {/* Document Summary */}
-        {file.status === 'completed' && file.summary && (
+        {/* Document Summary - Only for content analysis */}
+        {analysisType === 'content' && file.status === 'completed' && file.summary && (
           <div className="mb-4">
             <button
               onClick={() => setShowSummary(!showSummary)}
@@ -157,8 +187,8 @@ export const ProcessingCard: React.FC<ProcessingCardProps> = ({ file, onRemove }
           </div>
         )}
 
-        {/* Page Results */}
-        {file.status === 'completed' && file.results && (
+        {/* Page Results - Only for content analysis */}
+        {analysisType === 'content' && file.status === 'completed' && file.results && (
           <div className="space-y-3">
             <button
               onClick={() => setShowPages(!showPages)}
@@ -224,9 +254,10 @@ export const ProcessingCard: React.FC<ProcessingCardProps> = ({ file, onRemove }
             )}
           </div>
         )}
+        
         <div className="my-4">
           {selected && (<pre className="whitespace-pre-wrap break-words text-sm text-black">{selected.analysis}</pre>)}
-	      </div>
+        </div>
       </div>
     </div>
   );
