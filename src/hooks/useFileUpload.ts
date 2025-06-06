@@ -42,7 +42,7 @@ export const useFileUpload = () => {
       ));
 
       // Send to backend API
-      const response = await fetch('http://localhost:3001/api/process-document', {
+      const response = await fetch('http://34.101.179.14:3001/api/process-document', {
         method: 'POST',
         body: formData,
       });

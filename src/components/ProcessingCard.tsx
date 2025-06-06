@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { UploadedFile } from '../types';
 import { 
   FileText, 
@@ -51,6 +51,8 @@ export const ProcessingCard: React.FC<ProcessingCardProps> = ({ file, onRemove }
     const mb = bytes / (1024 * 1024);
     return `${mb.toFixed(1)} MB`;
   };
+
+  const [selected, setSelected] = useState<null | typeof file.results[0]>(null);
 
   return (
     <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-lg">
@@ -110,8 +112,8 @@ export const ProcessingCard: React.FC<ProcessingCardProps> = ({ file, onRemove }
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto">
-              {file.results.slice(0, 4).map((result) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64">
+              {file.results.slice(0, 10).map((result) => (
                 <div
                   key={result.pageNumber}
                   className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors"
@@ -127,17 +129,26 @@ export const ProcessingCard: React.FC<ProcessingCardProps> = ({ file, onRemove }
                   <p className="text-xs text-gray-600 line-clamp-3">
                     {result.analysis}
                   </p>
+            <button
+              onClick={() => setSelected(result)}
+              className="text-xs text-blue-600 hover:underline mt-1"
+            >
+              More
+            </button>
                 </div>
               ))}
             </div>
             
-            {file.results.length > 4 && (
+            {file.results.length > 10 && (
               <p className="text-sm text-gray-500 text-center">
-                And {file.results.length - 4} more pages...
+                And {file.results.length - 10} more pages...
               </p>
             )}
           </div>
         )}
+	<div className="my-4">
+          {selected && (<pre className="whitespace-pre-wrap break-words text-sm text-black">{selected.analysis}</pre>)}
+	</div>
       </div>
     </div>
   );
