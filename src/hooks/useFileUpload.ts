@@ -7,6 +7,7 @@ export const useFileUpload = () => {
   const [analysisType, setAnalysisType] = useState<AnalysisType>('content');
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
+  const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_URL || 'http://34.101.179.14:3001';
 
   const uploadFile = useCallback(async (file: File) => {
     if (file.type !== 'application/pdf') {
@@ -45,8 +46,8 @@ export const useFileUpload = () => {
 
       // Determine endpoint based on analysis type
       const endpoint = analysisType === 'content' 
-        ? 'http://34.101.179.14:3001/api/process-document'
-        : 'http://34.101.179.14:3001/api/detect-forgery';
+        ? `${API_BASE_URL}/api/process-document`
+        : `${API_BASE_URL}/api/detect-forgery`;
 
       // Send to backend API
       const response = await fetch(endpoint, {
