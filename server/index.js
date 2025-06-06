@@ -92,9 +92,11 @@ app.post('/api/process-document', upload.single('file'), async (req, res) => {
       success: true,
       message: 'Document processed successfully',
       data: {
-        fileName: fileName,
-        totalPages: results.length,
-        results: results
+        fileName: processedDocument.fileName,
+        totalPages: processedDocument.totalPages,
+        results: processedDocument.pages,
+        summary: processedDocument.summary,
+        stats: processedDocument.processingStats
       }
     });
 

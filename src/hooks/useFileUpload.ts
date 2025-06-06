@@ -55,7 +55,7 @@ export const useFileUpload = () => {
       const result = await response.json();
 
       if (result.success) {
-        // Update with results
+        // Update with results including summary
         setFiles(prev => prev.map(f => 
           f.id === uploadedFile.id 
             ? { 
@@ -63,7 +63,9 @@ export const useFileUpload = () => {
                 status: 'completed', 
                 progress: 100,
                 pages: result.data.totalPages,
-                results: result.data.results
+                results: result.data.results,
+                summary: result.data.summary,
+                stats: result.data.stats
               }
             : f
         ));

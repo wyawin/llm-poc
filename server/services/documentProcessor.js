@@ -92,6 +92,35 @@ export async function processDocument(filePath, fileName) {
       }
     }
 
+    // Generate document summary after processing all pages
+    console.log('Generating document summary...');
+    let documentSummary = null;
+    
+    try {
+      const summaryResult = await ollamaService.generateDocumentSummary(results, fileName);
+      documentSummary = {
+        content: summaryResult.summary,
+        model: summaryResult.model,
+        processingTime: summaryResult.processingTime,
+        success: summaryResult.success,
+        fallback: summaryResult.fallback || false
+      };
+      
+      if (summaryResult.success) {
+        console.log('Document summary generated successfully');
+      } else {
+        console.warn('Document summary generated with fallback method');
+      }
+    } catch (summaryError) {
+      console.error('Failed to generate document summary:', summaryError.message);
+      documentSummary = {
+        content: 'Failed to generate document summary. Please review individual page analyses.',
+        error: summaryError.message,
+        success: false,
+        fallback: true
+      };
+    }
+
     // Clean up temporary files
     try {
       const tempFiles = fs.readdirSync(tempDir);
@@ -104,8 +133,20 @@ export async function processDocument(filePath, fileName) {
       console.warn('Failed to clean up temporary files:', cleanupError.message);
     }
 
-    console.log(`Document processing completed. Processed ${results.length} pages.`);
-    return results;
+    console.log(`Document processing completed. Processed ${results.length} pages with summary.`);
+    
+    return {
+      pages: results,
+      summary: documentSummary,
+      totalPages: results.length,
+      fileName: fileName,
+      processingStats: {
+        successfulPages: results.filter(r => !r.error).length,
+        failedPages: results.filter(r => r.error).length,
+        averageConfidence: results.reduce((sum, r) => sum + (r.confidence || 0), 0) / results.length,
+        totalProcessingTime: results.reduce((sum, r) => sum + (r.processingTime || 0), 0)
+      }
+    };
 
   } catch (error) {
     console.error('Document processing error:', error);

@@ -8,6 +8,8 @@ export interface UploadedFile {
   progress: number;
   pages?: number;
   results?: ProcessingResult[];
+  summary?: DocumentSummary;
+  stats?: ProcessingStats;
   error?: string;
 }
 
@@ -17,6 +19,24 @@ export interface ProcessingResult {
   analysis: string;
   confidence: number;
   processingTime: number;
+  model?: string;
+  error?: string;
+}
+
+export interface DocumentSummary {
+  content: string;
+  model?: string;
+  processingTime?: number;
+  success: boolean;
+  fallback?: boolean;
+  error?: string;
+}
+
+export interface ProcessingStats {
+  successfulPages: number;
+  failedPages: number;
+  averageConfidence: number;
+  totalProcessingTime: number;
 }
 
 export interface ApiResponse {
