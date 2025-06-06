@@ -83,7 +83,7 @@ app.post('/api/process-document', upload.single('file'), async (req, res) => {
     console.log(`Processing document: ${fileName}`);
 
     // Process the document
-    const results = await processDocument(filePath, fileName);
+    const processedDocument = await processDocument(filePath, fileName);
 
     // Clean up uploaded file
     fs.unlinkSync(filePath);
