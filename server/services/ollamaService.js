@@ -43,8 +43,6 @@ class OllamaService {
 3. Document structure and formatting observations
 4. Any notable elements like tables, charts, or images
 5. Overall assessment of the content quality and readability
-6. if the document is profit and loss statement or balance sheet, provide the information and data in the table format, the table should use the period statement as the column
-7. if the document is deed of establishment legal document, specify all of the director name, the director birth date, and the deed of establishment date
 
 Be thorough and specific in your analysis.`;
 
@@ -118,6 +116,8 @@ Please provide:
 5. **Notable Elements**: Any significant charts, tables, images, or special formatting
 6. **Content Quality**: Assessment of the document's clarity, completeness, and usefulness
 7. **Recommendations**: Suggested actions or next steps based on the content (if applicable)
+8. if the document is profit and loss statement or balance sheet, provide the information and data in the table format, the table should use the period statement as the column
+9. if the document is deed of establishment legal document, specify all of the director name, the director birth date, and the deed of establishment date
 
 Format your response clearly with headers and bullet points where appropriate.`;
 
